@@ -1,6 +1,6 @@
 # Nep-Preter in Rust
 
-This interpreter was written in accordance to Crafting Interpreters Book. The scanner is Recursive Descent and the interpreter type is Tree walk interpreter
+This interpreter was written in accordance to Crafting Interpreters Book. The scanner is Recursive Descent and the interpreter type is Tree walk interpreter. Dynamically typed language
 
 The Keywords are
 
@@ -20,6 +20,14 @@ cargo run -- -h
 
 
 ```
+
+Features
+
+1. Statements
+2. Variables
+3. Functions and closures
+4. Classes
+5. Inheritance
 
 ## Some Examples
 

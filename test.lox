@@ -1,0 +1,10 @@
+print "hello nepal";
+
+fun test(n) {
+    if (n > 5) return n;
+    return n * 5;
+}
+
+var data = test(6);
+
+print data;

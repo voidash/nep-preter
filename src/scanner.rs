@@ -127,8 +127,10 @@ impl Default for Scanner {
                 ("अनि", TokenType::And),
                 ("वर्ग", TokenType::Class),
                 ("अरु", TokenType::Else),
+                ("नत्र", TokenType::Else),
                 ("गलत", TokenType::False),
                 ("भुमरी", TokenType::For),
+                ("फर", TokenType::For),
                 ("काम", TokenType::Fun),
                 ("यदि", TokenType::If),
                 ("आलु", TokenType::Nil),
@@ -140,6 +142,23 @@ impl Default for Scanner {
                 ("सहि", TokenType::True),
                 ("भार", TokenType::Var),
                 ("जबसम्म", TokenType::While),
+
+                ("ani", TokenType::And),
+                ("barga", TokenType::Class),
+                ("natra", TokenType::Else),
+                ("galat", TokenType::False),
+                ("bhumari", TokenType::For),
+                ("kaam", TokenType::Fun),
+                ("yadi", TokenType::If),
+                ("aalu", TokenType::Nil),
+                ("wa", TokenType::Or),
+                ("chap", TokenType::Print),
+                ("return", TokenType::Return),
+                ("super", TokenType::Super),
+                ("yo", TokenType::This),
+                ("sahi", TokenType::True),
+                ("ghosana", TokenType::Var),
+                ("jabasamma", TokenType::While),
             ]
             .into_iter()
             .map(|(k, v)| (String::from(k), v))
@@ -240,8 +259,27 @@ impl Scanner {
                     }
                         self.add_token(TokenType::Semicolon); 
                         self.advance();
-                    }else{}
+                    }else{
+                        self.identifier()
+                    }
             }
+            'm' => {
+                 let mut didfind = false;
+                 if self.matches('u') {
+                 self.advance();
+                 if self.matches('j') == true {
+                     if self.peek() == 'i'{ 
+                        self.add_token(TokenType::Semicolon); 
+                        self.advance();
+                        didfind = true;
+                     }
+                 }
+                }
+             if !didfind {
+                self.identifier()
+             }
+            }     
+
             ' ' | '\r' | '\t' => {}
             '\n' => {
                 self.line += 1;

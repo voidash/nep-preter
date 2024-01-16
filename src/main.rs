@@ -50,12 +50,12 @@ fn nepfy(data: String) -> String {
 fn main() {
 
 
-    let matches = App::new("loxi")
+    let matches = App::new("nep preter")
         .version("1.0")
         .about("नेप-Preter")
-        .author("आशिष थापा").arg(
+        .author("Ashish Thapa").arg(
             Arg::with_name(FILENAME)
-                .help("फाइल नेम दिनुहोस")
+                .help("Please provide Filename")
                 .required(false)
                 .index(1),
         )
@@ -63,7 +63,7 @@ fn main() {
             Arg::with_name(INPUT)
                 .long("-c")
                 .takes_value(true)
-                .help("यहि स्ट्रिङ पास गर्नुहोस"),
+                .help("Parse String here"),
         )
         .get_matches();
 

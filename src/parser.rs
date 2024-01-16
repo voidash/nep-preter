@@ -11,9 +11,9 @@ struct Parser {
 }
 
 pub enum Error {
-    Unअपेक्षितToken(scanner::Token),
+    UnexpectedToken(scanner::Token),
     TokenMismatch {
-        अपेक्षित: scanner::TokenType,
+        expected: scanner::TokenType,
         found: scanner::Token,
         maybe_on_err_string: Option<String>,
     },
@@ -34,7 +34,7 @@ pub enum Error {
         line: usize,
         col: i64,
     },
-    अपेक्षितExpression {
+    ExpectedExpression {
         token_type: scanner::TokenType,
         line: usize,
         col: i64,
@@ -54,20 +54,20 @@ pub enum Error {
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
-            Error::Unअपेक्षितToken(tok) => write!(
+            Error::UnexpectedToken(tok) => write!(
                 f,
-                "Unअपेक्षित token {:?} at line={},col={}",
+                "Unexpected token {:?} at line={},col={}",
                 tok.ty, tok.line, tok.col
             ),
             Error::TokenMismatch {
                 maybe_on_err_string,
-                अपेक्षित,
+                expected,
                 found,
             } => {
                 write!(
                     f,
-                    " अपेक्षित टोकन {:?} तर भेट्टियो {:?}.  रेखा={},स्नम्भ={}",
-                    अपेक्षित, found.ty, found.line, found.col
+                    " expected टोकन {:?} तर भेट्टियो {:?}.  रेखा={},स्नम्भ={}",
+                    expected, found.ty, found.line, found.col
                 )?;
                 if let Some(on_err_string) = maybe_on_err_string {
                     write!(f, ": {}", on_err_string)?;
@@ -92,13 +92,13 @@ impl fmt::Debug for Error {
                 "घोषणा(function) मा २५५ भन्दा बढी प्यारामिटरहरू हुन सक्दैन। रेखा={}, स्तम्भ={}",
                 line, col
             ),
-            Error::अपेक्षितExpression {
+            Error::ExpectedExpression {
                 token_type,
                 line,
                 col,
             } => write!(
                 f,
-                "अपेक्षित अभिव्यक्ति(अपेक्षित expression), तर लाइन={}, col={} मा टोकन(Token) {:?} भेटियो",
+                "expected अभिव्यक्ति(expected expression), तर लाइन={}, col={} मा टोकन(Token) {:?} भेटियो",
                  line, col, token_type
             ),
             Error::InvalidTokenInUnaryOp {
@@ -142,7 +142,7 @@ pub fn parse(
         Ok(stmts_or_err) => {
             if !p.is_at_end() {
                 let tok = &p.tokens[p.current];
-                Err(Error::Unअपेक्षितToken(tok.clone()))
+                Err(Error::UnexpectedToken(tok.clone()))
             } else {
                 Ok(stmts_or_err)
             }
@@ -181,7 +181,7 @@ impl Parser {
 
     fn class_decl(&mut self) -> Result<expr::Stmt, Error> {
         let name_tok = self
-            .consume(scanner::TokenType::Identifier, "अपेक्षित class name")?
+            .consume(scanner::TokenType::Identifier, "expected class name")?
             .clone();
 
         let class_symbol = expr::Symbol {
@@ -192,7 +192,7 @@ impl Parser {
 
         let superclass_maybe = if self.matches(scanner::TokenType::Less) {
             let superclass_tok =
-                self.consume(scanner::TokenType::Identifier, "अपेक्षित class  नाम (name) .")?;
+                self.consume(scanner::TokenType::Identifier, "expected class  नाम (name) .")?;
             Some(expr::Symbol {
                 name: superclass_tok.lexeme.iter().collect(),
                 line: superclass_tok.line,
@@ -202,7 +202,7 @@ impl Parser {
             None
         };
 
-        self.consume(scanner::TokenType::LeftBrace, "अपेक्षित {  पछि  class name")?;
+        self.consume(scanner::TokenType::LeftBrace, "expected {  पछि  class name")?;
 
         let mut methods = Vec::new();
         while !self.check(scanner::TokenType::RightBrace) && !self.is_at_end() {
@@ -212,7 +212,7 @@ impl Parser {
 
         self.consume(
             scanner::TokenType::RightBrace,
-            "अपेक्षित }  पछि  class body",
+            "expected }  पछि  class body",
         )?;
 
         Ok(expr::Stmt::ClassDecl(expr::ClassDecl {
@@ -226,7 +226,7 @@ impl Parser {
         let name_tok = self
             .consume(
                 scanner::TokenType::Identifier,
-                format!("अपेक्षित {:?} name", kind).as_ref(),
+                format!("expected {:?} name", kind).as_ref(),
             )?
             .clone();
 
@@ -251,7 +251,7 @@ impl Parser {
     ) -> Result<(Vec<expr::Symbol>, Vec<expr::Stmt>), Error> {
         self.consume(
             scanner::TokenType::LeftParen,
-            format!("अपेक्षित (  पछि  {:?} name", kind).as_ref(),
+            format!("expected (  पछि  {:?} name", kind).as_ref(),
         )?;
 
         let mut parameters = Vec::new();
@@ -268,7 +268,7 @@ impl Parser {
                 }
 
                 let tok = self
-                    .consume(scanner::TokenType::Identifier, "अपेक्षित  प्यारामीटर(parameter) name")?
+                    .consume(scanner::TokenType::Identifier, "expected  प्यारामीटर(parameter) name")?
                     .clone();
 
                 parameters.push(expr::Symbol {
@@ -290,7 +290,7 @@ impl Parser {
         )?;
         self.consume(
             scanner::TokenType::LeftBrace,
-            "अपेक्षित { before function body",
+            "expected { before function body",
         )?;
         let saved_is_in_fundec = self.in_fundec;
         self.in_fundec = true;
@@ -302,7 +302,7 @@ impl Parser {
 
     fn var_decl(&mut self) -> Result<expr::Stmt, Error> {
         let name_token = self
-            .consume(scanner::TokenType::Identifier, "अपेक्षित  भेरिएबल (variable)  name")?
+            .consume(scanner::TokenType::Identifier, "expected  भेरिएबल (variable)  name")?
             .clone();
 
         let maybe_initializer = if self.matches(scanner::TokenType::Equal) {
@@ -313,7 +313,7 @@ impl Parser {
 
         self.consume(
             scanner::TokenType::Semicolon,
-            "अपेक्षित ;  पछि   भेरिएबल (variable)  declaration",
+            "expected ;  पछि   भेरिएबल (variable)  declaration",
         )?;
 
         Ok(expr::Stmt::VarDecl(
@@ -373,7 +373,7 @@ impl Parser {
         if maybe_retval.is_some() {
             self.consume(
                 scanner::TokenType::Semicolon,
-                "अपेक्षित ;  पछि   फर्कने (return)   भ्यालु (value)",
+                "expected ;  पछि   फर्कने (return)   भ्यालु (value)",
             )?;
         }
 
@@ -387,7 +387,7 @@ impl Parser {
     }
 
     fn for_statement(&mut self) -> Result<expr::Stmt, Error> {
-        self.consume(scanner::TokenType::LeftParen, "अपेक्षित (  पछि  for.")?;
+        self.consume(scanner::TokenType::LeftParen, "expected (  पछि  for.")?;
 
         let mut maybe_initializer: Option<expr::Stmt> = None;
         if self.matches(scanner::TokenType::Semicolon) {
@@ -406,7 +406,7 @@ impl Parser {
 
         self.consume(
             scanner::TokenType::Semicolon,
-            "अपेक्षित ;  पछि  loop condition",
+            "expected ;  पछि  loop condition",
         )?;
 
         let maybe_increment = if !self.check(scanner::TokenType::RightParen) {
@@ -417,7 +417,7 @@ impl Parser {
 
         self.consume(
             scanner::TokenType::RightParen,
-            "अपेक्षित )  पछि  for clauses",
+            "expected )  पछि  for clauses",
         )?;
 
         let mut body = self.statement()?;
@@ -441,22 +441,22 @@ impl Parser {
     }
 
     fn while_statement(&mut self) -> Result<expr::Stmt, Error> {
-        self.consume(scanner::TokenType::LeftParen, "अपेक्षित (  पछि  while")?;
+        self.consume(scanner::TokenType::LeftParen, "expected (  पछि  while")?;
         let cond = self.expression()?;
         self.consume(
             scanner::TokenType::RightParen,
-            "अपेक्षित )  पछि  while condition",
+            "expected )  पछि  while condition",
         )?;
         let body = Box::new(self.statement()?);
         Ok(expr::Stmt::While(cond, body))
     }
 
     fn if_statement(&mut self) -> Result<expr::Stmt, Error> {
-        self.consume(scanner::TokenType::LeftParen, "अपेक्षित (  पछि  if.")?;
+        self.consume(scanner::TokenType::LeftParen, "expected (  पछि  if.")?;
         let cond = self.expression()?;
         self.consume(
             scanner::TokenType::RightParen,
-            "अपेक्षित )  पछि  if condition.",
+            "expected )  पछि  if condition.",
         )?;
         let then_branch = Box::new(self.statement()?);
         let maybe_else_branch = if self.matches(scanner::TokenType::Else) {
@@ -475,20 +475,20 @@ impl Parser {
             stmts.push(self.declaration()?)
         }
 
-        self.consume(scanner::TokenType::RightBrace, "अपेक्षित }  पछि  block.")?;
+        self.consume(scanner::TokenType::RightBrace, "expected }  पछि  block.")?;
 
         Ok(stmts)
     }
 
     fn print_statement(&mut self) -> Result<expr::Stmt, Error> {
         let expr = self.expression()?;
-        self.consume(scanner::TokenType::Semicolon, "अपेक्षित ;  पछि  भ्यालु (value)")?;
+        self.consume(scanner::TokenType::Semicolon, "expected ;  पछि  भ्यालु (value)")?;
         Ok(expr::Stmt::Print(expr))
     }
 
     fn expression_statement(&mut self) -> Result<expr::Stmt, Error> {
         let expr = self.expression()?;
-        self.consume(scanner::TokenType::Semicolon, "अपेक्षित ;  पछि  भ्यालु (value)")?;
+        self.consume(scanner::TokenType::Semicolon, "expected ;  पछि  भ्यालु (value)")?;
         Ok(expr::Stmt::Expr(expr))
     }
 
@@ -626,7 +626,7 @@ impl Parser {
                 let name_tok = self
                     .consume(
                         scanner::TokenType::Identifier,
-                        "अपेक्षित  गुड (property)   नाम (name)   पछि  '.'.",
+                        "expected  गुड (property)   नाम (name)   पछि  '.'.",
                     )?
                     .clone();
                 expr = expr::Expr::Get(
@@ -665,7 +665,7 @@ impl Parser {
 
         let token = self.consume(
             scanner::TokenType::RightParen,
-            "अपेक्षित )  पछि  arguments.",
+            "expected )  पछि  arguments.",
         )?;
 
         Ok(expr::Expr::Call(
@@ -690,10 +690,10 @@ impl Parser {
         }
         if self.matches(scanner::TokenType::Super) {
             let super_tok = self.previous().clone();
-            self.consume(scanner::TokenType::Dot, "अपेक्षित '.'  पछि  'super'.")?;
+            self.consume(scanner::TokenType::Dot, "expected '.'  पछि  'super'.")?;
             let method_tok = self.consume(
                 scanner::TokenType::Identifier,
-                "अपेक्षित superclass method  नाम (name) .",
+                "expected superclass method  नाम (name) .",
             )?;
             return Ok(expr::Expr::Super(
                 expr::SourceLocation {
@@ -760,12 +760,12 @@ impl Parser {
             let expr = Box::new(self.expression()?);
             self.consume(
                 scanner::TokenType::RightParen,
-                "अपेक्षित ')'  पछि  expression.",
+                "expected ')'  पछि  expression.",
             )?;
             return Ok(expr::Expr::Grouping(expr));
         }
 
-        Err(Error::अपेक्षितExpression {
+        Err(Error::ExpectedExpression {
             token_type: self.peek().ty,
             line: self.peek().line,
             col: self.peek().col,
@@ -781,7 +781,7 @@ impl Parser {
             return Ok(self.advance());
         }
         Err(Error::TokenMismatch {
-            अपेक्षित: tok,
+            expected: tok,
             found: self.peek().clone(),
             maybe_on_err_string: Some(on_err_str.into()),
         })
